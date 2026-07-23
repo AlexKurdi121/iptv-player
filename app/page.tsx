@@ -44,7 +44,7 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fallback channels with HTTPS URLs where possible
+  // Fallback channels
   const fallbackChannels: Channel[] = [
     {
       id: 1,
@@ -54,18 +54,135 @@ export default function Home() {
       icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
       isActive: true
     },
-    // ... rest of your channels with HTTPS URLs
-  ];
-
-  // Convert HTTP to HTTPS for stream URLs (if needed)
-  const normalizeStreamUrl = (url: string): string => {
-    if (!url) return '';
-    // If on Vercel (HTTPS), convert HTTP streams to HTTPS
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return url.replace('http://', 'https://');
+    {
+      id: 2,
+      name: 'Rudaw HD',
+      streamUrl: 'http://aou.magiclive.xyz:2052/live/a79KGwP5/uW5HjCq/323743.m3u8',
+      category: 'News',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
+      isActive: true
+    },
+    {
+      id: 3,
+      name: 'Channel 8',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'General',
+      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
+      isActive: true
+    },
+    {
+      id: 4,
+      name: 'Al-Hadath',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'News',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
+      isActive: true
+    },
+    {
+      id: 5,
+      name: 'Al-Arabiya',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'News',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
+      isActive: true
+    },
+    {
+      id: 6,
+      name: 'Kurdistan TV',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'General',
+      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
+      isActive: true
+    },
+    {
+      id: 7,
+      name: 'KurdMax Sorani HD',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'General',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
+      isActive: true
+    },
+    {
+      id: 8,
+      name: 'NRT HD',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'News',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
+      isActive: true
+    },
+    {
+      id: 9,
+      name: 'NRT Sports',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'Sports',
+      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
+      isActive: true
+    },
+    {
+      id: 10,
+      name: 'Avar HD',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'General',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
+      isActive: true
+    },
+    {
+      id: 11,
+      name: 'War HD',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'General',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
+      isActive: true
+    },
+    {
+      id: 12,
+      name: 'MBC 1',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'Entertainment',
+      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
+      isActive: true
+    },
+    {
+      id: 13,
+      name: 'MBC 2',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'Entertainment',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
+      isActive: true
+    },
+    {
+      id: 14,
+      name: 'MBC 3',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'Kids',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
+      isActive: true
+    },
+    {
+      id: 15,
+      name: 'BBC News',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'News',
+      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
+      isActive: true
+    },
+    {
+      id: 16,
+      name: 'BBC Drama',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'Entertainment',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
+      isActive: true
+    },
+    {
+      id: 17,
+      name: 'Shams HD',
+      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
+      category: 'General',
+      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
+      isActive: true
     }
-    return url;
-  };
+  ];
 
   // Fetch channels from Supabase
   useEffect(() => {
@@ -88,7 +205,7 @@ export default function Home() {
           const mappedData = data.map((item: any) => ({
             id: item.id,
             name: item.name || 'Unknown Channel',
-            streamUrl: normalizeStreamUrl(item.stream_url || item.streamUrl || ''),
+            streamUrl: item.stream_url || item.streamUrl || '',
             category: item.category || 'General',
             icon: item.icon || 'https://via.placeholder.com/200x200/e5e7eb/6b7280?text=📺',
             isActive: item.is_active !== undefined ? item.is_active : true
@@ -132,7 +249,7 @@ export default function Home() {
     return matchesSearch && matchesCategory;
   });
 
-  // Function to load stream with better error handling and CORS support
+  // Function to load stream - REMOVED unsafe headers
   const loadStream = (streamUrl: string) => {
     const video = videoRef.current;
     if (!video) {
@@ -146,9 +263,7 @@ export default function Home() {
       return;
     }
 
-    // Normalize URL for HTTPS
-    const normalizedUrl = normalizeStreamUrl(streamUrl);
-    console.log('Loading stream:', normalizedUrl);
+    console.log('Loading stream:', streamUrl);
 
     setIsLoading(true);
     setError(null);
@@ -163,37 +278,23 @@ export default function Home() {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
-          // Add CORS configuration
+          // CORS configuration - REMOVED unsafe headers
           xhrSetup: function(xhr, url) {
-            // Allow cross-origin requests
+            // Only configure CORS, don't set forbidden headers
             xhr.withCredentials = false;
-            // Set headers for the stream
-            xhr.setRequestHeader('Referer', 'http://aou.magiclive.xyz:2052/');
-            xhr.setRequestHeader('Origin', 'http://aou.magiclive.xyz:2052');
-            
-            // Handle CORS for Vercel
-            try {
-              const urlObj = new URL(url);
-              // Allow specific origins
-              if (urlObj.hostname.includes('magiclive.xyz') || urlObj.hostname.includes('spacetvee.com')) {
-                // For these domains, we need to allow cross-origin
-                xhr.withCredentials = false;
-              }
-            } catch (e) {
-              console.warn('Invalid URL:', url);
-            }
+            // For cross-origin requests, don't set Referer or Origin manually
+            // The browser will handle these automatically
           }
         });
         
         hlsRef.current = hls;
-        hls.loadSource(normalizedUrl);
+        hls.loadSource(streamUrl);
         hls.attachMedia(video);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setIsLoading(false);
           video.play().catch((err) => {
             console.log('Autoplay prevented:', err);
-            // Still show the video, user can click play
           });
         });
 
@@ -210,16 +311,29 @@ export default function Home() {
             setError('Fatal error loading stream. Please try again.');
             // Attempt recovery
             if (hlsRef.current) {
-              hlsRef.current.recoverMediaError();
+              try {
+                hlsRef.current.recoverMediaError();
+              } catch (e) {
+                console.error('Recovery failed:', e);
+              }
             }
           } else {
             setError('Stream error: ' + (data.details || 'Unknown error'));
           }
         });
 
+        // Add fallback for when HLS fails
+        hls.on(Hls.Events.FRAG_LOADING_ERROR, (event, data) => {
+          console.warn('Fragment loading error:', data);
+          // Try to recover by reloading
+          if (hlsRef.current) {
+            hlsRef.current.loadSource(streamUrl);
+          }
+        });
+
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // For Safari
-        video.src = normalizedUrl;
+        video.src = streamUrl;
         video.addEventListener('loadedmetadata', () => {
           setIsLoading(false);
           video.play().catch((err) => {
