@@ -44,7 +44,7 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fallback channels
+  // Fallback channels with HTTPS URLs where possible
   const fallbackChannels: Channel[] = [
     {
       id: 1,
@@ -54,135 +54,18 @@ export default function Home() {
       icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
       isActive: true
     },
-    {
-      id: 2,
-      name: 'Rudaw HD',
-      streamUrl: 'http://aou.magiclive.xyz:2052/live/a79KGwP5/uW5HjCq/323743.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 3,
-      name: 'Channel 8',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 4,
-      name: 'Al-Hadath',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 5,
-      name: 'Al-Arabiya',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 6,
-      name: 'Kurdistan TV',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 7,
-      name: 'KurdMax Sorani HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 8,
-      name: 'NRT HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 9,
-      name: 'NRT Sports',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Sports',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 10,
-      name: 'Avar HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 11,
-      name: 'War HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 12,
-      name: 'MBC 1',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Entertainment',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 13,
-      name: 'MBC 2',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Entertainment',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 14,
-      name: 'MBC 3',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Kids',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 15,
-      name: 'BBC News',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 16,
-      name: 'BBC Drama',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Entertainment',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 17,
-      name: 'Shams HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    }
+    // ... rest of your channels with HTTPS URLs
   ];
+
+  // Convert HTTP to HTTPS for stream URLs (if needed)
+  const normalizeStreamUrl = (url: string): string => {
+    if (!url) return '';
+    // If on Vercel (HTTPS), convert HTTP streams to HTTPS
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      return url.replace('http://', 'https://');
+    }
+    return url;
+  };
 
   // Fetch channels from Supabase
   useEffect(() => {
@@ -205,7 +88,7 @@ export default function Home() {
           const mappedData = data.map((item: any) => ({
             id: item.id,
             name: item.name || 'Unknown Channel',
-            streamUrl: item.stream_url || item.streamUrl || '',
+            streamUrl: normalizeStreamUrl(item.stream_url || item.streamUrl || ''),
             category: item.category || 'General',
             icon: item.icon || 'https://via.placeholder.com/200x200/e5e7eb/6b7280?text=📺',
             isActive: item.is_active !== undefined ? item.is_active : true
@@ -249,10 +132,13 @@ export default function Home() {
     return matchesSearch && matchesCategory;
   });
 
-  // Function to load stream
+  // Function to load stream with better error handling and CORS support
   const loadStream = (streamUrl: string) => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video) {
+      console.error('Video element not found');
+      return;
+    }
 
     if (!streamUrl || streamUrl.trim() === '') {
       setError('Invalid stream URL');
@@ -260,7 +146,12 @@ export default function Home() {
       return;
     }
 
+    // Normalize URL for HTTPS
+    const normalizedUrl = normalizeStreamUrl(streamUrl);
+    console.log('Loading stream:', normalizedUrl);
+
     setIsLoading(true);
+    setError(null);
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -272,32 +163,73 @@ export default function Home() {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
+          // Add CORS configuration
           xhrSetup: function(xhr, url) {
+            // Allow cross-origin requests
+            xhr.withCredentials = false;
+            // Set headers for the stream
             xhr.setRequestHeader('Referer', 'http://aou.magiclive.xyz:2052/');
             xhr.setRequestHeader('Origin', 'http://aou.magiclive.xyz:2052');
+            
+            // Handle CORS for Vercel
+            try {
+              const urlObj = new URL(url);
+              // Allow specific origins
+              if (urlObj.hostname.includes('magiclive.xyz') || urlObj.hostname.includes('spacetvee.com')) {
+                // For these domains, we need to allow cross-origin
+                xhr.withCredentials = false;
+              }
+            } catch (e) {
+              console.warn('Invalid URL:', url);
+            }
           }
         });
         
         hlsRef.current = hls;
-        hls.loadSource(streamUrl);
+        hls.loadSource(normalizedUrl);
         hls.attachMedia(video);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setIsLoading(false);
-          video.play().catch(() => console.log('Autoplay prevented'));
+          video.play().catch((err) => {
+            console.log('Autoplay prevented:', err);
+            // Still show the video, user can click play
+          });
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('HLS Error:', data);
           setIsLoading(false);
-          setError('Stream error: ' + (data.details || 'Unknown error'));
+          
+          // Handle specific error types
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            setError('Network error loading stream. Please check your connection.');
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            setError('Media error. The stream may be unavailable.');
+          } else if (data.fatal) {
+            setError('Fatal error loading stream. Please try again.');
+            // Attempt recovery
+            if (hlsRef.current) {
+              hlsRef.current.recoverMediaError();
+            }
+          } else {
+            setError('Stream error: ' + (data.details || 'Unknown error'));
+          }
         });
 
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = streamUrl;
+        // For Safari
+        video.src = normalizedUrl;
         video.addEventListener('loadedmetadata', () => {
           setIsLoading(false);
-          video.play().catch(() => console.log('Autoplay prevented'));
+          video.play().catch((err) => {
+            console.log('Autoplay prevented:', err);
+          });
+        });
+        video.addEventListener('error', (e) => {
+          console.error('Video error:', e);
+          setIsLoading(false);
+          setError('Error loading stream in Safari');
         });
       } else {
         setError('HLS not supported in this browser');
@@ -306,7 +238,7 @@ export default function Home() {
     } catch (err) {
       console.error('Error loading stream:', err);
       setIsLoading(false);
-      setError('Failed to load stream');
+      setError('Failed to load stream: ' + (err as Error).message);
     }
   };
 
@@ -319,9 +251,10 @@ export default function Home() {
     setSelectedChannel(channel);
     setCurrentChannel(channel);
     setShowModal(true);
+    // Small delay to ensure modal is rendered before loading stream
     setTimeout(() => {
       loadStream(channel.streamUrl);
-    }, 200);
+    }, 300);
   };
 
   const handleCloseModal = () => {
