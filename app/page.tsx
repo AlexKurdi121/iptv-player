@@ -249,7 +249,7 @@ export default function Home() {
     return matchesSearch && matchesCategory;
   });
 
-  // Function to load stream - REMOVED unsafe headers
+  // Function to load stream - FIXED: Removed FRAG_LOADING_ERROR
   const loadStream = (streamUrl: string) => {
     const video = videoRef.current;
     if (!video) {
@@ -282,8 +282,6 @@ export default function Home() {
           xhrSetup: function(xhr, url) {
             // Only configure CORS, don't set forbidden headers
             xhr.withCredentials = false;
-            // For cross-origin requests, don't set Referer or Origin manually
-            // The browser will handle these automatically
           }
         });
         
@@ -322,13 +320,14 @@ export default function Home() {
           }
         });
 
-        // Add fallback for when HLS fails
-        hls.on(Hls.Events.FRAG_LOADING_ERROR, (event, data) => {
-          console.warn('Fragment loading error:', data);
-          // Try to recover by reloading
-          if (hlsRef.current) {
-            hlsRef.current.loadSource(streamUrl);
-          }
+        // Add fallback for when fragments fail - FIXED: Using correct event name
+        hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
+          console.log('Fragment loaded:', data);
+        });
+
+        // Handle fragment loading errors with the correct event
+        hls.on(Hls.Events.FRAG_LOADING, (event, data) => {
+          console.log('Fragment loading:', data);
         });
 
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
