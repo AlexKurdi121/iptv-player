@@ -1,4 +1,16 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+// Handle CORS pre-flight requests from browsers and IPTV players
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+    },
+  });
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -9,16 +21,21 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Forward Range header if the player asks for specific byte ranges (vital for scrubbing/seeking)
+    const rangeHeader = request.headers.get("range");
+    const fetchHeaders: HeadersInit = {
+      "User-Agent": request.headers.get("user-agent") || "VLC/3.0.16 LibVLC/3.0.16",
+      ...(request.headers.get("referer") ? { Referer: request.headers.get("referer")! } : {}),
+      ...(rangeHeader ? { Range: rangeHeader } : {}),
+    };
+
     const upstreamResponse = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": request.headers.get("user-agent") || "VLC/3.0.16 LibVLC/3.0.16",
-        ...(request.headers.get("referer") ? { Referer: request.headers.get("referer")! } : {}),
-      },
+      headers: fetchHeaders,
       cache: "no-store",
       redirect: "follow",
     });
 
-    if (!upstreamResponse.ok) {
+    if (!upstreamResponse.ok && upstreamResponse.status !== 206) {
       return new Response(`Upstream fetch failed: ${upstreamResponse.statusText}`, {
         status: upstreamResponse.status,
       });
@@ -30,16 +47,18 @@ export async function GET(request: NextRequest) {
       targetUrl.includes(".m3u8") ||
       finalUpstreamUrl.includes(".m3u8") ||
       contentType.includes("application/vnd.apple.mpegurl") ||
-      contentType.includes("audio/mpegurl");
+      contentType.includes("audio/mpegurl") ||
+      contentType.includes("text/plain");
+
+    const host = request.headers.get("host") || "localhost:3000";
+    const protocol = request.headers.get("x-forwarded-proto") || "http";
+    // Change this to match your proxy path (e.g., /api/proxy or /proxy.php)
+    const domainProxyPrefix = `${protocol}://${host}/api/proxy`;
 
     if (isM3u8) {
       const text = await upstreamResponse.text();
       const lines = text.split("\n");
       const resolvedBaseUrl = new URL(finalUpstreamUrl);
-
-      const host = request.headers.get("host") || "localhost:3000";
-      const protocol = request.headers.get("x-forwarded-proto") || "http";
-      const domainProxyPrefix = `${protocol}://${host}/proxy.php`;
 
       const rewrittenLines = lines.map((line) => {
         const trimmed = line.trim();
@@ -73,20 +92,27 @@ export async function GET(request: NextRequest) {
         headers: {
           "Content-Type": "application/vnd.apple.mpegurl",
           "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
         },
       });
     } else {
-      const headers = new Headers();
-      if (contentType) headers.set("Content-Type", contentType);
+      // Stream media fragments (.ts / .mp4) back to the browser with range support
+      const responseHeaders = new Headers();
+      if (contentType) responseHeaders.set("Content-Type", contentType);
+      
       const contentLength = upstreamResponse.headers.get("content-length");
-      if (contentLength) headers.set("Content-Length", contentLength);
-      headers.set("Access-Control-Allow-Origin", "*");
-      headers.set("Access-Control-Allow-Methods", "GET");
+      if (contentLength) responseHeaders.set("Content-Length", contentLength);
+      
+      const contentRange = upstreamResponse.headers.get("content-range");
+      if (contentRange) responseHeaders.set("Content-Range", contentRange);
 
-      // Pass the body stream and init options inside a single object parameter to prevent signature mismatches
+      responseHeaders.set("Access-Control-Allow-Origin", "*");
+      responseHeaders.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+      responseHeaders.set("Accept-Ranges", "bytes");
+
       return new Response(upstreamResponse.body, {
         status: upstreamResponse.status,
-        headers,
+        headers: responseHeaders,
       });
     }
   } catch (error: any) {
