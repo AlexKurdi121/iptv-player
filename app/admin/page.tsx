@@ -30,7 +30,8 @@ export default function AdminPage() {
     streamUrl: '',
     category: '',
     icon: '',
-    isActive: true
+    isActive: true,
+    useProxy: false
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -144,7 +145,8 @@ export default function AdminPage() {
       streamUrl: '',
       category: '',
       icon: '',
-      isActive: true
+      isActive: true,
+      useProxy: false
     });
     setShowModal(true);
     setError(null);
@@ -154,12 +156,15 @@ export default function AdminPage() {
   // Open modal for editing channel
   const handleEdit = (channel: Channel) => {
     setEditingChannel(channel);
+    // Check if the URL already has the proxy prefix
+    const hasProxy = channel.streamUrl.includes('api/proxy?url=');
     setFormData({
       name: channel.name || '',
       streamUrl: channel.streamUrl || '',
       category: channel.category || '',
       icon: channel.icon || '',
-      isActive: channel.isActive ?? true
+      isActive: channel.isActive ?? true,
+      useProxy: hasProxy
     });
     setShowModal(true);
     setError(null);
@@ -174,12 +179,21 @@ export default function AdminPage() {
         return;
       }
 
+      // Process URL with proxy if enabled
+      let finalStreamUrl = formData.streamUrl.trim();
+      if (formData.useProxy && finalStreamUrl) {
+        // Check if URL already has proxy prefix
+        if (!finalStreamUrl.includes('api/proxy?url=')) {
+          finalStreamUrl = `https://iptv-player-m1m.vercel.app/api/proxy?url=${encodeURIComponent(finalStreamUrl)}`;
+        }
+      }
+
       if (editingChannel) {
         const { error } = await supabase
           .from('channels')
           .update({
             name: formData.name,
-            stream_url: formData.streamUrl,
+            stream_url: finalStreamUrl,
             category: formData.category,
             icon: formData.icon || 'https://via.placeholder.com/200x200/e5e7eb/6b7280?text=📺',
             is_active: formData.isActive,
@@ -194,7 +208,7 @@ export default function AdminPage() {
           .from('channels')
           .insert([{
             name: formData.name,
-            stream_url: formData.streamUrl,
+            stream_url: finalStreamUrl,
             category: formData.category,
             icon: formData.icon || 'https://via.placeholder.com/200x200/e5e7eb/6b7280?text=📺',
             is_active: formData.isActive
@@ -349,6 +363,11 @@ export default function AdminPage() {
   const truncateText = (text: string, maxLength: number) => {
     if (!text) return 'No URL';
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
+  // Check if a URL has proxy
+  const hasProxy = (url: string) => {
+    return url.includes('api/proxy?url=');
   };
 
   // Show loading while checking auth
@@ -575,6 +594,9 @@ export default function AdminPage() {
                   }`}>Category</th>
                   <th className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>Proxy</th>
+                  <th className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
                   }`}>Status</th>
                   <th className={`px-4 py-3 text-right text-xs font-medium uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -584,13 +606,13 @@ export default function AdminPage() {
               <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center">
+                    <td colSpan={6} className="px-4 py-8 text-center">
                       <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
                     </td>
                   </tr>
                 ) : filteredChannels.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className={`px-4 py-8 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <td colSpan={6} className={`px-4 py-8 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       No channels found
                     </td>
                   </tr>
@@ -631,6 +653,19 @@ export default function AdminPage() {
                             : 'bg-blue-100 text-blue-700'
                         }`}>
                           {channel.category}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          hasProxy(channel.streamUrl)
+                            ? isDarkMode
+                              ? 'bg-purple-500/20 text-purple-300'
+                              : 'bg-purple-100 text-purple-700'
+                            : isDarkMode
+                              ? 'bg-gray-600 text-gray-400'
+                              : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {hasProxy(channel.streamUrl) ? '🔒 Proxy' : 'Direct'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -755,13 +790,22 @@ export default function AdminPage() {
                   name="streamUrl"
                   value={formData.streamUrl || ''}
                   onChange={handleInputChange}
-                  placeholder="Enter stream URL"
+                  placeholder="Enter stream URL (e.g., http://jjdjddjd.com)"
                   className={`w-full rounded-lg px-4 py-2.5 transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500' 
                       : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500'
                   } border focus:outline-none`}
                 />
+                {formData.useProxy && formData.streamUrl && (
+                  <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-xs text-blue-400">
+                      🔗 Will be saved as: <span className="font-mono break-all">
+                        https://iptv-player-m1m.vercel.app/api/proxy?url={encodeURIComponent(formData.streamUrl)}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -798,6 +842,32 @@ export default function AdminPage() {
                       : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500'
                   } border focus:outline-none`}
                 />
+              </div>
+
+              {/* Proxy Toggle */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-gradient-to-r from-purple-500/5 to-blue-500/5 border-purple-500/20">
+                <input
+                  type="checkbox"
+                  name="useProxy"
+                  checked={formData.useProxy}
+                  onChange={handleInputChange}
+                  className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 transition-colors"
+                />
+                <div className="flex-1">
+                  <label className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Use Proxy
+                  </label>
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    When enabled, the channel URL will be proxied through the API
+                  </p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  formData.useProxy
+                    ? 'bg-purple-500/20 text-purple-400'
+                    : 'bg-gray-500/20 text-gray-400'
+                }`}>
+                  {formData.useProxy ? '🔒 On' : '🔓 Off'}
+                </span>
               </div>
 
               <div className="flex items-center gap-3">
