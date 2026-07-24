@@ -455,19 +455,7 @@ export default function Home() {
                 {isDarkMode ? '🌞' : '🌙'}
               </button>
 
-              {session ? (
-                <Link href="/admin">
-                  <button className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm">
-                    ⚙️ Admin
-                  </button>
-                </Link>
-              ) : (
-                <Link href="/login">
-                  <button className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
-                    🔐 Login
-                  </button>
-                </Link>
-              )}
+             
 
               {currentChannel && (
                 <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border ${
