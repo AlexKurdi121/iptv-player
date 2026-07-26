@@ -2,11 +2,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import Hls from 'hls.js';
 import { supabase } from './lib/supabase';
 
-// Define the Channel type
 interface Channel {
   id: number;
   name: string;
@@ -29,7 +27,28 @@ export default function Home() {
   const [loadingChannels, setLoadingChannels] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
+  const [isTV, setIsTV] = useState(false);
   const hlsRef = useRef<Hls | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Detect if on Smart TV
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isSmartTV = 
+      userAgent.includes('smarttv') ||
+      userAgent.includes('tizen') ||
+      userAgent.includes('webos') ||
+      userAgent.includes('android') && userAgent.includes('tv') ||
+      userAgent.includes('vizio') ||
+      userAgent.includes('sony') ||
+      userAgent.includes('samsung');
+    
+    setIsTV(isSmartTV);
+    
+    // Log for debugging
+    console.log('Device detected:', isSmartTV ? 'Smart TV' : 'Regular device');
+    console.log('User Agent:', userAgent);
+  }, []);
 
   // Check session
   useEffect(() => {
@@ -249,8 +268,8 @@ export default function Home() {
     return matchesSearch && matchesCategory;
   });
 
-  // Function to load stream - FIXED: Removed FRAG_LOADING_ERROR
-  const loadStream = (streamUrl: string) => {
+  // Improved stream loading for Smart TVs
+  const loadStream = (streamUrl: string, retryCount = 0) => {
     const video = videoRef.current;
     if (!video) {
       console.error('Video element not found');
@@ -264,24 +283,80 @@ export default function Home() {
     }
 
     console.log('Loading stream:', streamUrl);
+    console.log('Retry count:', retryCount);
 
     setIsLoading(true);
     setError(null);
 
+    // Clear any existing retry timeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+
+    // Destroy existing HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
     try {
+      // First, try native HLS playback (works on many Smart TVs)
+      if (video.canPlayType('application/vnd.apple.mpegurl') || 
+          video.canPlayType('audio/mpegurl')) {
+        console.log('Using native HLS playback');
+        video.src = streamUrl;
+        
+        video.onloadedmetadata = () => {
+          console.log('Native HLS: metadata loaded');
+          setIsLoading(false);
+          video.play().catch((err) => {
+            console.log('Autoplay prevented:', err);
+            // Try again with HLS.js if native fails
+            if (retryCount < 2) {
+              console.log('Native playback failed, trying HLS.js...');
+              setTimeout(() => loadStream(streamUrl, retryCount + 1), 1000);
+            }
+          });
+        };
+
+        video.onerror = (e) => {
+          console.error('Native HLS error:', e);
+          if (retryCount < 2) {
+            console.log('Retrying with HLS.js...');
+            setTimeout(() => loadStream(streamUrl, retryCount + 1), 1000);
+          } else {
+            setIsLoading(false);
+            setError('Failed to load stream. Please try again later.');
+          }
+        };
+
+        return;
+      }
+
+      // If native HLS not supported, use HLS.js
       if (Hls.isSupported()) {
+        console.log('Using HLS.js');
+        
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
-          // CORS configuration - REMOVED unsafe headers
+          liveDurationInfinity: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          // Better settings for Smart TVs
+          fragLoadingTimeOut: 20000,
+          manifestLoadingTimeOut: 20000,
+          levelLoadingTimeOut: 20000,
+          // Disable CORS restrictions for Smart TVs
           xhrSetup: function(xhr, url) {
-            // Only configure CORS, don't set forbidden headers
             xhr.withCredentials = false;
+            // Try to set custom headers for better compatibility
+            try {
+              xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (SmartTV)');
+            } catch (e) {
+              // Ignore header errors
+            }
           }
         });
         
@@ -289,89 +364,148 @@ export default function Home() {
         hls.loadSource(streamUrl);
         hls.attachMedia(video);
         
+        // Event listeners - using only events that actually exist
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('HLS: Manifest parsed');
           setIsLoading(false);
           video.play().catch((err) => {
             console.log('Autoplay prevented:', err);
           });
         });
 
+        hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+          console.log('HLS: Level switched', data);
+        });
+
+        hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
+          console.log('HLS: Fragment loaded');
+          setIsLoading(false);
+        });
+
+        // Handle fragment loading events
+        hls.on(Hls.Events.FRAG_LOADING, (event, data) => {
+          console.log('HLS: Fragment loading', data);
+        });
+
+        // General error handler - this is the main error handler
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('HLS Error:', data);
-          setIsLoading(false);
           
-          // Handle specific error types
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            setError('Network error loading stream. Please check your connection.');
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            setError('Media error. The stream may be unavailable.');
-          } else if (data.fatal) {
-            setError('Fatal error loading stream. Please try again.');
-            // Attempt recovery
-            if (hlsRef.current) {
-              try {
-                hlsRef.current.recoverMediaError();
-              } catch (e) {
-                console.error('Recovery failed:', e);
+          if (data.fatal) {
+            console.log('Fatal HLS error, attempting recovery...');
+            
+            // Attempt recovery based on error type
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              setError('Network error. Retrying...');
+              // Retry with different approach
+              if (retryCount < 3) {
+                setTimeout(() => {
+                  loadStream(streamUrl, retryCount + 1);
+                }, 2000 * (retryCount + 1));
+              } else {
+                setIsLoading(false);
+                setError('Network error. Please check your connection.');
               }
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              setError('Media error. Retrying...');
+              if (hlsRef.current) {
+                try {
+                  hlsRef.current.recoverMediaError();
+                } catch (e) {
+                  console.error('Recovery failed:', e);
+                }
+              }
+            } else {
+              setIsLoading(false);
+              setError('Stream error. Please try again.');
             }
           } else {
-            setError('Stream error: ' + (data.details || 'Unknown error'));
+            // Non-fatal error, just log it
+            console.log('Non-fatal HLS error:', data);
           }
         });
 
-        // Add fallback for when fragments fail - FIXED: Using correct event name
-        hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
-          console.log('Fragment loaded:', data);
+        // Handle buffer events that exist
+        hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => {
+          console.log('HLS: Buffer appending');
         });
 
-        // Handle fragment loading errors with the correct event
-        hls.on(Hls.Events.FRAG_LOADING, (event, data) => {
-          console.log('Fragment loading:', data);
+        hls.on(Hls.Events.BUFFER_APPENDED, (event, data) => {
+          console.log('HLS: Buffer appended');
         });
 
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // For Safari
+        // Handle when playback stalls
+        video.addEventListener('stalled', () => {
+          console.warn('Video stalled, attempting recovery...');
+          if (hlsRef.current) {
+            try {
+              // Try to recover by seeking slightly
+              if (video.buffered.length > 0) {
+                const currentTime = video.currentTime;
+                video.currentTime = currentTime + 0.1;
+                setTimeout(() => {
+                  if (video) video.currentTime = currentTime;
+                }, 100);
+              }
+            } catch (e) {
+              console.error('Stall recovery failed:', e);
+            }
+          }
+        });
+
+        // Handle waiting events
+        video.addEventListener('waiting', () => {
+          console.log('Video waiting for data...');
+          if (!isLoading) {
+            setIsLoading(true);
+          }
+        });
+
+        video.addEventListener('canplay', () => {
+          console.log('Video can play');
+          setIsLoading(false);
+        });
+
+      } else {
+        // Fallback: Use a simple video element
+        console.log('Using fallback video playback');
         video.src = streamUrl;
-        video.addEventListener('loadedmetadata', () => {
+        video.load();
+        
+        video.oncanplay = () => {
+          console.log('Fallback: Video can play');
           setIsLoading(false);
           video.play().catch((err) => {
             console.log('Autoplay prevented:', err);
           });
-        });
-        video.addEventListener('error', (e) => {
-          console.error('Video error:', e);
+        };
+
+        video.onerror = (e) => {
+          console.error('Fallback error:', e);
           setIsLoading(false);
-          setError('Error loading stream in Safari');
-        });
-      } else {
-        setError('HLS not supported in this browser');
-        setIsLoading(false);
+          setError('Your browser does not support this stream format.');
+        };
       }
     } catch (err) {
       console.error('Error loading stream:', err);
       setIsLoading(false);
       setError('Failed to load stream: ' + (err as Error).message);
+      
+      // Last resort retry
+      if (retryCount < 2) {
+        setTimeout(() => {
+          loadStream(streamUrl, retryCount + 1);
+        }, 2000);
+      }
     }
   };
 
-  const handleChannelClick = (channel: Channel) => {
-    if (!channel.streamUrl || channel.streamUrl.trim() === '') {
-      setError(`Channel "${channel.name}" has no stream URL`);
-      return;
+  // Clean up function
+  const cleanupPlayer = () => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
     }
-    
-    setSelectedChannel(channel);
-    setCurrentChannel(channel);
-    setShowModal(true);
-    // Small delay to ensure modal is rendered before loading stream
-    setTimeout(() => {
-      loadStream(channel.streamUrl);
-    }, 300);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -381,6 +515,30 @@ export default function Home() {
       videoRef.current.src = '';
       videoRef.current.load();
     }
+  };
+
+  const handleChannelClick = (channel: Channel) => {
+    cleanupPlayer();
+    
+    if (!channel.streamUrl || channel.streamUrl.trim() === '') {
+      setError(`Channel "${channel.name}" has no stream URL`);
+      return;
+    }
+    
+    setSelectedChannel(channel);
+    setCurrentChannel(channel);
+    setShowModal(true);
+    setError(null);
+    
+    // Small delay to ensure modal is rendered before loading stream
+    setTimeout(() => {
+      loadStream(channel.streamUrl);
+    }, 500);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    cleanupPlayer();
     setCurrentChannel(null);
     setIsLoading(false);
     setSelectedChannel(null);
@@ -392,12 +550,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
+    return cleanupPlayer;
   }, []);
 
   // Loading state
@@ -437,6 +590,7 @@ export default function Home() {
               <div>
                 <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                   IPTV Player
+                  {isTV && <span className="text-xs ml-2 text-blue-400">(TV Mode)</span>}
                 </h1>
                 <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   {channels.length} Channels
@@ -454,34 +608,30 @@ export default function Home() {
               >
                 {isDarkMode ? '🌞' : '🌙'}
               </button>
-
-             
-
-              {currentChannel && (
-                <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border ${
-                  isDarkMode 
-                    ? 'bg-green-900/30 border-green-700' 
-                    : 'bg-green-100 border-green-200'
-                }`}>
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  <span className={`text-xs font-medium ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>
-                    LIVE
-                  </span>
-                  <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {currentChannel.name}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Error Message */}
+        {/* Error Message with retry option */}
         {error && (
-          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
-            ⚠️ {error}
+          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-red-400 text-sm">⚠️ {error}</span>
+              <button
+                onClick={() => {
+                  if (selectedChannel) {
+                    setError(null);
+                    setIsLoading(true);
+                    loadStream(selectedChannel.streamUrl);
+                  }
+                }}
+                className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs hover:bg-red-500/30 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           </div>
         )}
 
@@ -584,38 +734,26 @@ export default function Home() {
             </p>
           </div>
         )}
-
-        {/* Footer */}
-        <div className={`mt-10 pt-6 border-t text-center transition-colors duration-300 ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            © {new Date().getFullYear()} IPTV Player. All rights reserved.
-          </p>
-          <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            {channels.length} channels • Click any channel to watch
-          </p>
-        </div>
       </div>
 
       {/* Video Player Modal */}
       {showModal && selectedChannel && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/90 backdrop-blur-sm"
             onClick={handleCloseModal}
           ></div>
           
-          <div className={`relative rounded-2xl w-full max-w-2xl border shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden ${
+          <div className={`relative rounded-2xl w-full max-w-4xl border shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden ${
             isDarkMode 
-              ? 'bg-gray-800 border-gray-700' 
+              ? 'bg-gray-900 border-gray-700' 
               : 'bg-white border-gray-200'
           }`}>
             <button
               onClick={handleCloseModal}
-              className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+              className={`absolute top-3 right-3 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-colors text-lg ${
                 isDarkMode 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white' 
+                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white' 
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800'
               }`}
             >
@@ -652,6 +790,7 @@ export default function Home() {
                 controls
                 playsInline
                 autoPlay
+                style={{ minHeight: '300px' }}
               />
               
               {isLoading && (
@@ -659,20 +798,22 @@ export default function Home() {
                   <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
                     <p className="text-white mt-3 text-sm font-medium">Loading stream...</p>
+                    <p className="text-gray-400 mt-1 text-xs">This may take a moment</p>
                   </div>
                 </div>
               )}
 
-              {!isLoading && currentChannel && (
+              {!isLoading && currentChannel && !error && (
                 <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2 border border-green-500/20">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   <span className="text-green-400 text-xs font-medium">LIVE</span>
+                  <span className="text-white text-xs ml-1">{selectedChannel.name}</span>
                 </div>
               )}
             </div>
 
             <div className={`px-6 py-4 flex items-center justify-between border-t ${
-              isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+              isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
             }`}>
               <div className="flex items-center gap-2">
                 <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -682,16 +823,35 @@ export default function Home() {
                   {selectedChannel.name}
                 </span>
               </div>
-              <button
-                onClick={handleCloseModal}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isDarkMode 
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Close Player
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (selectedChannel) {
+                      cleanupPlayer();
+                      setTimeout(() => {
+                        loadStream(selectedChannel.streamUrl);
+                      }, 300);
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isDarkMode 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  Reload
+                </button>
+                <button
+                  onClick={handleCloseModal}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
