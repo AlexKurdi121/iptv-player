@@ -1,3 +1,4 @@
+import 'core-js/stable'; // ← Add this at the very top
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

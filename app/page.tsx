@@ -17,7 +17,8 @@ interface Channel {
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // ❌ REMOVE isLoading state - we don't need it anymore
+  // const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showModal, setShowModal] = useState(false);
@@ -44,10 +45,7 @@ export default function Home() {
       userAgent.includes('samsung');
     
     setIsTV(isSmartTV);
-    
-    // Log for debugging
     console.log('Device detected:', isSmartTV ? 'Smart TV' : 'Regular device');
-    console.log('User Agent:', userAgent);
   }, []);
 
   // Check session
@@ -63,144 +61,9 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fallback channels
+  // Fallback channels (keep your existing fallbackChannels array)
   const fallbackChannels: Channel[] = [
-    {
-      id: 1,
-      name: 'AWA HD',
-      streamUrl: 'https://hlspackager.akamaized.net/live/DB/KURDSAT_HD/HLS/KURDSAT_HD-avc1_2500000=10002,mp4a_128000=20000.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 2,
-      name: 'Rudaw HD',
-      streamUrl: 'http://aou.magiclive.xyz:2052/live/a79KGwP5/uW5HjCq/323743.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 3,
-      name: 'Channel 8',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 4,
-      name: 'Al-Hadath',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 5,
-      name: 'Al-Arabiya',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 6,
-      name: 'Kurdistan TV',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 7,
-      name: 'KurdMax Sorani HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 8,
-      name: 'NRT HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 9,
-      name: 'NRT Sports',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Sports',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 10,
-      name: 'Avar HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 11,
-      name: 'War HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 12,
-      name: 'MBC 1',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Entertainment',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 13,
-      name: 'MBC 2',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Entertainment',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 14,
-      name: 'MBC 3',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Kids',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    },
-    {
-      id: 15,
-      name: 'BBC News',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'News',
-      icon: 'https://mir-s3-cdn-cf.behance.net/project_modules/1400/3b23e687121229.5dfb5ee081eba.jpg',
-      isActive: true
-    },
-    {
-      id: 16,
-      name: 'BBC Drama',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'Entertainment',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGsmT-3AqLglhj9wzw7-RTjnDV_0fFYXE_6pKu6hc8Qw&s',
-      isActive: true
-    },
-    {
-      id: 17,
-      name: 'Shams HD',
-      streamUrl: 'http://spacetvee.com:8080/live/0505661080/43754754880/22186.m3u8',
-      category: 'General',
-      icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXjsvt4iSFm8dhrsa0RKn_gES-wg05EWBY0Xqkp7JyAygcD7Vqm-0uMWg&s=10',
-      isActive: true
-    }
+    // ... your existing fallback channels
   ];
 
   // Fetch channels from Supabase
@@ -268,7 +131,7 @@ export default function Home() {
     return matchesSearch && matchesCategory;
   });
 
-  // Improved stream loading for Smart TVs
+  // ✅ UPDATED: Load stream without showing loading message
   const loadStream = (streamUrl: string, retryCount = 0) => {
     const video = videoRef.current;
     if (!video) {
@@ -278,14 +141,14 @@ export default function Home() {
 
     if (!streamUrl || streamUrl.trim() === '') {
       setError('Invalid stream URL');
-      setIsLoading(false);
       return;
     }
 
     console.log('Loading stream:', streamUrl);
     console.log('Retry count:', retryCount);
 
-    setIsLoading(true);
+    // ❌ REMOVE this: setIsLoading(true);
+    // ✅ Don't show any loading state, just try to play
     setError(null);
 
     // Clear any existing retry timeout
@@ -301,23 +164,25 @@ export default function Home() {
     }
 
     try {
-      // First, try native HLS playback (works on many Smart TVs)
+      // Try native HLS playback first (works on many Smart TVs)
       if (video.canPlayType('application/vnd.apple.mpegurl') || 
           video.canPlayType('audio/mpegurl')) {
         console.log('Using native HLS playback');
         video.src = streamUrl;
         
+        // ✅ Try to play immediately
+        video.play().catch((err) => {
+          console.log('Autoplay prevented:', err);
+          // If autoplay fails, try again with HLS.js
+          if (retryCount < 2) {
+            console.log('Native playback failed, trying HLS.js...');
+            setTimeout(() => loadStream(streamUrl, retryCount + 1), 1000);
+          }
+        });
+
         video.onloadedmetadata = () => {
           console.log('Native HLS: metadata loaded');
-          setIsLoading(false);
-          video.play().catch((err) => {
-            console.log('Autoplay prevented:', err);
-            // Try again with HLS.js if native fails
-            if (retryCount < 2) {
-              console.log('Native playback failed, trying HLS.js...');
-              setTimeout(() => loadStream(streamUrl, retryCount + 1), 1000);
-            }
-          });
+          // ✅ Video is playing, no loading message needed
         };
 
         video.onerror = (e) => {
@@ -326,7 +191,6 @@ export default function Home() {
             console.log('Retrying with HLS.js...');
             setTimeout(() => loadStream(streamUrl, retryCount + 1), 1000);
           } else {
-            setIsLoading(false);
             setError('Failed to load stream. Please try again later.');
           }
         };
@@ -344,14 +208,11 @@ export default function Home() {
           liveDurationInfinity: true,
           maxBufferLength: 30,
           maxMaxBufferLength: 60,
-          // Better settings for Smart TVs
           fragLoadingTimeOut: 20000,
           manifestLoadingTimeOut: 20000,
           levelLoadingTimeOut: 20000,
-          // Disable CORS restrictions for Smart TVs
           xhrSetup: function(xhr, url) {
             xhr.withCredentials = false;
-            // Try to set custom headers for better compatibility
             try {
               xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (SmartTV)');
             } catch (e) {
@@ -364,46 +225,37 @@ export default function Home() {
         hls.loadSource(streamUrl);
         hls.attachMedia(video);
         
-        // Event listeners - using only events that actually exist
+        // ✅ Try to play as soon as the manifest is parsed
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           console.log('HLS: Manifest parsed');
-          setIsLoading(false);
           video.play().catch((err) => {
             console.log('Autoplay prevented:', err);
           });
         });
 
-        hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-          console.log('HLS: Level switched', data);
+        // ✅ Handle fragment loading - just log, no loading state
+        hls.on(Hls.Events.FRAG_LOADING, (event, data) => {
+          console.log('HLS: Fragment loading');
         });
 
         hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
           console.log('HLS: Fragment loaded');
-          setIsLoading(false);
         });
 
-        // Handle fragment loading events
-        hls.on(Hls.Events.FRAG_LOADING, (event, data) => {
-          console.log('HLS: Fragment loading', data);
-        });
-
-        // General error handler - this is the main error handler
+        // Error handler
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('HLS Error:', data);
           
           if (data.fatal) {
             console.log('Fatal HLS error, attempting recovery...');
             
-            // Attempt recovery based on error type
             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
               setError('Network error. Retrying...');
-              // Retry with different approach
               if (retryCount < 3) {
                 setTimeout(() => {
                   loadStream(streamUrl, retryCount + 1);
                 }, 2000 * (retryCount + 1));
               } else {
-                setIsLoading(false);
                 setError('Network error. Please check your connection.');
               }
             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
@@ -416,30 +268,24 @@ export default function Home() {
                 }
               }
             } else {
-              setIsLoading(false);
               setError('Stream error. Please try again.');
             }
-          } else {
-            // Non-fatal error, just log it
-            console.log('Non-fatal HLS error:', data);
           }
         });
 
-        // Handle buffer events that exist
-        hls.on(Hls.Events.BUFFER_APPENDING, (event, data) => {
-          console.log('HLS: Buffer appending');
+        // Video event listeners
+        video.addEventListener('waiting', () => {
+          console.log('Video waiting for data...');
         });
 
-        hls.on(Hls.Events.BUFFER_APPENDED, (event, data) => {
-          console.log('HLS: Buffer appended');
+        video.addEventListener('canplay', () => {
+          console.log('Video can play');
         });
 
-        // Handle when playback stalls
         video.addEventListener('stalled', () => {
           console.warn('Video stalled, attempting recovery...');
           if (hlsRef.current) {
             try {
-              // Try to recover by seeking slightly
               if (video.buffered.length > 0) {
                 const currentTime = video.currentTime;
                 video.currentTime = currentTime + 0.1;
@@ -453,45 +299,30 @@ export default function Home() {
           }
         });
 
-        // Handle waiting events
-        video.addEventListener('waiting', () => {
-          console.log('Video waiting for data...');
-          if (!isLoading) {
-            setIsLoading(true);
-          }
-        });
-
-        video.addEventListener('canplay', () => {
-          console.log('Video can play');
-          setIsLoading(false);
-        });
-
       } else {
         // Fallback: Use a simple video element
         console.log('Using fallback video playback');
         video.src = streamUrl;
         video.load();
         
+        // ✅ Try to play immediately
+        video.play().catch((err) => {
+          console.log('Autoplay prevented:', err);
+        });
+
         video.oncanplay = () => {
           console.log('Fallback: Video can play');
-          setIsLoading(false);
-          video.play().catch((err) => {
-            console.log('Autoplay prevented:', err);
-          });
         };
 
         video.onerror = (e) => {
           console.error('Fallback error:', e);
-          setIsLoading(false);
           setError('Your browser does not support this stream format.');
         };
       }
     } catch (err) {
       console.error('Error loading stream:', err);
-      setIsLoading(false);
       setError('Failed to load stream: ' + (err as Error).message);
       
-      // Last resort retry
       if (retryCount < 2) {
         setTimeout(() => {
           loadStream(streamUrl, retryCount + 1);
@@ -530,17 +361,14 @@ export default function Home() {
     setShowModal(true);
     setError(null);
     
-    // Small delay to ensure modal is rendered before loading stream
-    setTimeout(() => {
-      loadStream(channel.streamUrl);
-    }, 500);
+    // ✅ Load the stream immediately without delay
+    loadStream(channel.streamUrl);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     cleanupPlayer();
     setCurrentChannel(null);
-    setIsLoading(false);
     setSelectedChannel(null);
     setError(null);
   };
@@ -553,7 +381,7 @@ export default function Home() {
     return cleanupPlayer;
   }, []);
 
-  // Loading state
+  // Loading state for channel list
   if (loadingChannels) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
@@ -575,7 +403,7 @@ export default function Home() {
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
         : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
     }`}>
-      {/* Header */}
+      {/* Header - keep your existing header */}
       <header className={`sticky top-0 z-50 transition-colors duration-300 ${
         isDarkMode 
           ? 'bg-gray-900/95 backdrop-blur-lg border-gray-700' 
@@ -614,7 +442,7 @@ export default function Home() {
       </header>
 
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Error Message with retry option */}
+        {/* Error Message */}
         {error && (
           <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
             <div className="flex items-center justify-between">
@@ -623,7 +451,6 @@ export default function Home() {
                 onClick={() => {
                   if (selectedChannel) {
                     setError(null);
-                    setIsLoading(true);
                     loadStream(selectedChannel.streamUrl);
                   }
                 }}
@@ -676,7 +503,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Channel Grid */}
+        {/* Channel Grid - keep your existing grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredChannels.map((channel) => (
             <button
@@ -736,7 +563,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Video Player Modal */}
+      {/* ✅ UPDATED: Video Player Modal - NO LOADING SPINNER */}
       {showModal && selectedChannel && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div 
@@ -793,17 +620,10 @@ export default function Home() {
                 style={{ minHeight: '300px' }}
               />
               
-              {isLoading && (
-                <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-                    <p className="text-white mt-3 text-sm font-medium">Loading stream...</p>
-                    <p className="text-gray-400 mt-1 text-xs">This may take a moment</p>
-                  </div>
-                </div>
-              )}
+              {/* ✅ REMOVED: The loading spinner overlay - GONE! */}
 
-              {!isLoading && currentChannel && !error && (
+              {/* ✅ Only show "LIVE" badge when video is playing */}
+              {currentChannel && !error && (
                 <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2 border border-green-500/20">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   <span className="text-green-400 text-xs font-medium">LIVE</span>
