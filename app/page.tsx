@@ -26,7 +26,6 @@ export default function Home() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loadingChannels, setLoadingChannels] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [session, setSession] = useState<any>(null);
   const [isTV, setIsTV] = useState(false);
   const hlsRef = useRef<Hls | null>(null);
   const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -43,18 +42,6 @@ export default function Home() {
       userAgent.includes('samsung');
     
     setIsTV(isSmartTV);
-  }, []);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -131,11 +118,31 @@ export default function Home() {
       hlsRef.current = null;
     }
 
-    // Route through internal API proxy to bypass Smart TV CORS restrictions
+    // Bypass HLS.js entirely on TV and point video src directly to proxy route
     const proxiedUrl = `/api/stream?url=${encodeURIComponent(streamUrl)}`;
 
     try {
-      if (Hls.isSupported()) {
+      if (isTV || !Hls.isSupported() || video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = proxiedUrl;
+        video.onloadeddata = () => {
+          setIsLoading(false);
+          if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+        };
+        video.onplaying = () => {
+          setIsLoading(false);
+          if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+        };
+        video.onerror = () => {
+          setIsLoading(false);
+          if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+          setError('Failed to load stream natively on TV.');
+        };
+        video.play().catch((err) => {
+          setIsLoading(false);
+          if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+          console.log('Autoplay blocked:', err);
+        });
+      } else {
         const hls = new Hls({
           enableWorker: false,
           lowLatencyMode: true,
@@ -154,29 +161,13 @@ export default function Home() {
           });
         });
 
-        video.onloadeddata = () => {
-          setIsLoading(false);
-          if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
-        };
-
-        video.onplaying = () => {
-          setIsLoading(false);
-          if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
-        };
-
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            console.error('Fatal HLS error:', data);
             setIsLoading(false);
             if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
             setError(`Stream error: ${data.details}`);
           }
         });
-      } else {
-        setIsLoading(false);
-        if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
-        video.src = proxiedUrl;
-        video.play().catch(e => console.log(e));
       }
     } catch (err) {
       setIsLoading(false);
@@ -283,7 +274,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
                   <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-                    <p className="text-white mt-3 text-sm font-medium">Loading Channel...</p>
+                    <p className="text-white mt-3 text-sm font-medium">Loading Channel</p>
                   </div>
                 </div>
               )}
