@@ -8,10 +8,25 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "browserslist": {
+    "production": [
+      "chrome >= 53",
+      "edge >= 79",
+      "firefox >= 60",
+      "safari >= 10",
+      "ios_saf >= 10"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
   "dependencies": {
     "@prisma/client": "^4.16.2",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
+    "core-js": "^3.49.0",
     "hls.js": "^1.6.16",
     "next": "16.2.11",
     "react": "19.2.4",
